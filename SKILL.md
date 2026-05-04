@@ -14,7 +14,7 @@ description: 阅读学术论文 PDF，生成结构化中文论文笔记，围绕
 用户提出以下需求时触发：
 
 - 初始化、检查或维护飞书论文知识库。
-- 阅读、精读、总结或分析学术论文 PDF。
+- 阅读、精读、总结或分析学术论文 PDF；默认等价于生成结构化本地论文笔记。
 - 生成结构化中文论文笔记。
 - 解释论文的方法、数据、实验、结论、局限或启发。
 - 讨论论文与用户研究方向的关系。
@@ -27,6 +27,8 @@ description: 阅读学术论文 PDF，生成结构化中文论文笔记，围绕
 - 普通 PDF、OCR 或文档处理，除非用户明确进入学术论文阅读流程。
 - 普通飞书 Wiki、Base、Doc 管理，除非目标属于论文知识库流程。
 - 泛泛找论文或文献检索，除非后续进入阅读、笔记、修订或归档。
+
+当用户给出论文 PDF 并要求“阅读、精读、总结、分析、帮我看下”等首次阅读动作时，不得降级为仅聊天摘要；必须进入论文阅读流程并默认生成本地 Markdown 笔记。只有用户明确要求“只要聊天总结”“不生成笔记”“离线口头总结”时，才可不生成笔记，并必须说明未使用飞书标签、出版选项和研究画像。
 
 如果意图不明确，先确认用户是否需要“论文阅读与飞书论文库”工作流。
 
@@ -49,7 +51,7 @@ description: 阅读学术论文 PDF，生成结构化中文论文笔记，围绕
 | 用户意图 | 读取文件 | 共享规则 |
 |---|---|---|
 | 初始化论文知识库 | `commands/kb-init.md` | `references/lark-workflows.md`、`references/command-pitfalls.md` |
-| 阅读 PDF 并生成 Markdown 笔记 | `commands/paper-read.md` | `references/note-writing-guide.md`、`references/publication-policy.md`、`references/command-pitfalls.md` |
+| 阅读/总结/分析 PDF 论文，默认生成 Markdown 笔记 | `commands/paper-read.md` | `references/note-writing-guide.md`、`references/publication-policy.md`、`references/command-pitfalls.md` |
 | 回答追问或讨论启发 | `commands/paper-discuss.md` | 需要笔记结构时读取 `references/note-writing-guide.md` |
 | 根据讨论或纠错修订笔记 | `commands/note-revise.md` | `references/note-writing-guide.md` |
 | 生成或更新 `研究概述` | `commands/profile-update.md` | `references/lark-workflows.md`、`references/command-pitfalls.md` |
