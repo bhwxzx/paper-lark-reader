@@ -156,10 +156,10 @@ lark-cli wiki +node-create \
 - `obj_token` 为 `child_doc_token`
 - `node_token` 为 `child_node_token`
 
-Wiki URL 使用：
+Wiki URL 优先使用 `wiki +node-create` 返回的 `data.url`。若返回值缺失，再使用通用 fallback：
 
 ```text
-https://<tenant>.feishu.cn/wiki/<child_node_token>
+https://www.feishu.cn/wiki/<child_node_token>
 ```
 
 ### 6. 写入笔记并修正标题

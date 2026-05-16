@@ -27,6 +27,31 @@ def emit(data, output=None):
         print(text)
 
 
+def error(message, hint="", **extra):
+    payload = {"ok": False, "error": message}
+    if hint:
+        payload["hint"] = hint
+    payload.update(extra)
+    return payload
+
+
+def intermediate_paths(pdf, output=None):
+    if output:
+        out = Path(output)
+        name = out.name
+        if name.endswith(".context.json"):
+            base = name[:-len(".context.json")]
+        else:
+            base = out.stem
+        root = out.with_name(base)
+    else:
+        root = Path(pdf).with_suffix("")
+    return {
+        "text": root.with_name(root.name + ".text.json"),
+        "metadata": root.with_name(root.name + ".metadata.json"),
+    }
+
+
 # ── 环境 ───────────────────────────────────────────────────────────────────────
 
 def cmd_check(args):
@@ -47,14 +72,26 @@ def cmd_paper_prep(args):
     title_val = metadata.get("title", {}).get("value", "")
     publication = apply_publication_fallback(crossref_lookup(title=title_val, doi=args.doi or metadata.get("publication_hints", {}).get("doi", "")), metadata)
     options = infer_options(metadata, publication=publication)
-    emit({
+    context = {
         "ok": True,
         "pdf": args.pdf,
         "engine": text_data["engine"],
+        "text_stats": {
+            "chars": len(text),
+            "engine": text_data["engine"],
+            "title_confidence": metadata.get("title", {}).get("confidence", ""),
+            "abstract_confidence": metadata.get("abstract", {}).get("confidence", ""),
+        },
         "metadata": metadata,
         "publication": publication,
         "options": options,
-    }, args.output)
+    }
+    if args.write_intermediates:
+        paths = intermediate_paths(args.pdf, args.output)
+        emit(text_data, paths["text"])
+        emit(metadata, paths["metadata"])
+        context["intermediates"] = {key: str(path) for key, path in paths.items()}
+    emit(context, args.output)
 
 
 def cmd_extract(args):
@@ -65,7 +102,22 @@ def cmd_extract(args):
 
 
 def cmd_metadata(args):
-    emit(extract_metadata(load_text_json(args.text_json)), args.output)
+    path = Path(args.text_json)
+    if not path.exists():
+        emit(error(
+            f"正文 JSON 文件不存在：{args.text_json}",
+            "请先运行 `python3 scripts/paper_lark_cli.py extract <paper.pdf> --output <paper.text.json>`，或使用 `paper-prep --write-intermediates` 生成中间文件。",
+            text_json=args.text_json,
+        ), args.output)
+        return
+    try:
+        emit(extract_metadata(load_text_json(args.text_json)), args.output)
+    except Exception as exc:
+        emit(error(
+            f"元数据抽取失败：{exc}",
+            "请确认输入是 `extract` 生成的 JSON，或包含可读取的 PDF 正文文本。",
+            text_json=args.text_json,
+        ), args.output)
 
 
 def cmd_lookup(args):
@@ -109,6 +161,7 @@ def main():
     p = sub.add_parser("paper-prep", help="PDF 预处理：extract + metadata + lookup + infer 一步完成")
     p.add_argument("--pdf", required=True)
     p.add_argument("--doi", default="", help="已知 DOI（可选，提高出版核验准确率）")
+    p.add_argument("--write-intermediates", action="store_true", help="同时写出同名 .text.json 和 .metadata.json")
     p.add_argument("--output")
     p.set_defaults(func=cmd_paper_prep)
 

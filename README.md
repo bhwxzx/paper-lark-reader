@@ -57,7 +57,7 @@ cp -R paper-lark-reader ~/.claude/skills/paper-lark-reader
 ## 环境要求
 
 - Python 3.9+。
-- 已安装并登录 `lark-cli`（推荐 `1.0.19` 版本）。
+- 已安装并登录 `lark-cli`。
 - 至少一种 PDF 文本抽取能力：`pdftotext`、`pdfplumber` 或 `pypdf`。
 - 飞书账号具备 Wiki、Base、Doc、Drive 相关权限。
 

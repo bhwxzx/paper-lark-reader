@@ -2,7 +2,7 @@
 
 执行任何 `lark-cli` 命令前必须阅读本文件。
 
-本 skill 按 `lark-cli version 1.0.19` 整理和验证。若版本不同，先查 `--help` 或 `schema`，再执行写入。
+本 skill 不绑定固定 `lark-cli` 版本。执行前以当前环境的 `--help` 或 `schema` 确认参数；若 help 与已验证行为冲突，优先使用本文记录的已验证命令形态并记录错误。
 
 ## 查阅规则
 
@@ -11,6 +11,9 @@
 ```bash
 # 查看原生命令请求结构
 lark-cli schema <resource>.<method>
+
+# 查看 CLI 版本；不要使用 `lark-cli version`
+lark-cli --version
 
 # 查看 shortcut 或原生命令 flag
 lark-cli <resource> <cmd> --help
@@ -57,7 +60,7 @@ lark-cli wiki spaces get_node --params '{"token":"<wiki_node_token>"}'
 
 ### P3 `docs +update --api-version v2` 使用 `--command`
 
-`lark-cli 1.0.19` 中，v2 写 Markdown 用 `--command`、`--doc-format` 和 `--content`：
+当前已验证的 v2 写 Markdown 兜底命令使用 `--command`、`--doc-format` 和 `--content`。如果 `docs +update --help` 展示 `--mode/--markdown`，但执行时报 `--command is required`，仍使用下面的已验证命令形态：
 
 ```bash
 lark-cli docs +update \
@@ -72,7 +75,7 @@ lark-cli docs +update \
 
 `overwrite` 后标题可能回退为 `Untitled`。每次 `docs +update --command overwrite` 后，都要重新 `drive files patch` 并用 `wiki spaces get_node` 回读标题。
 
-读取 docx 时不要使用不存在的 `--format markdown`；`lark-cli 1.0.19` 会提示 unknown format 并退回 JSON。需要读取正文时使用默认 JSON、`--format pretty`，或按 `docs +fetch --help` 支持的格式选择。
+读取 docx 时不要使用不存在的 `--format markdown`；需要读取正文时使用默认 JSON、`--format pretty`，或按 `docs +fetch --help` 支持的格式选择。
 
 ### P4 `lark-cli api` 路径不加 `/open-apis`
 

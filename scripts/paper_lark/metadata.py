@@ -83,7 +83,29 @@ def crossref_lookup(title="", doi=""):
     candidates = sorted(candidates, key=lambda x: x.get("title_similarity", 0), reverse=True)
     selected = candidates[0] if candidates and candidates[0].get("title_similarity", 0) >= 0.78 else {}
     confidence = "high" if selected.get("title_similarity", 0) >= 0.92 and selected.get("venue") else ("medium" if selected.get("venue") else "low")
-    return {"candidates": candidates, "selected": selected, "confidence": confidence, "needs_user_confirmation": True, "errors": errors}
+    reason = "" if selected.get("venue") else "missing_venue"
+    return {
+        "candidates": candidates,
+        "selected": selected,
+        "confidence": confidence,
+        "needs_user_confirmation": bool(reason),
+        "confirmation_reason": reason,
+        "errors": errors,
+    }
+
+
+def _norm(value):
+    return re.sub(r"[^a-z0-9]+", "", str(value or "").lower())
+
+
+def publication_conflict(selected, hints):
+    hint_venue = hints.get("venue") or hints.get("preprint_source") or ((hints.get("venue_mentions") or [""])[0])
+    hint_year = (hints.get("year_candidates") or [""])[0]
+    selected_venue = selected.get("venue") or ""
+    selected_year = str(selected.get("year") or "")
+    venue_conflict = bool(hint_venue and selected_venue and _norm(hint_venue) not in _norm(selected_venue) and _norm(selected_venue) not in _norm(hint_venue))
+    year_conflict = bool(hint_year and selected_year and hint_year != selected_year)
+    return venue_conflict or year_conflict
 
 
 def apply_publication_fallback(publication, metadata):
@@ -92,13 +114,23 @@ def apply_publication_fallback(publication, metadata):
     hints = (metadata or {}).get("publication_hints", {})
     selected = publication.get("selected") or {}
     if selected.get("venue"):
-        return publication
+        result = dict(publication)
+        if publication_conflict(selected, hints):
+            result["needs_user_confirmation"] = True
+            result["confirmation_reason"] = "source_conflict"
+        else:
+            result["needs_user_confirmation"] = False
+            result["confirmation_reason"] = ""
+        return result
 
     venue = hints.get("venue") or hints.get("preprint_source") or ((hints.get("venue_mentions") or [""])[0])
     year = (hints.get("year_candidates") or [""])[0]
     doi = hints.get("doi") or ""
     if not (venue and year):
-        return publication
+        result = dict(publication)
+        result["needs_user_confirmation"] = True
+        result["confirmation_reason"] = "missing_venue"
+        return result
 
     fallback = {
         "source": "PDF",
@@ -117,6 +149,7 @@ def apply_publication_fallback(publication, metadata):
         "selected": fallback,
         "confidence": "medium",
         "needs_user_confirmation": True,
+        "confirmation_reason": "pdf_evidence_only",
         "errors": publication.get("errors") or [],
     }
 

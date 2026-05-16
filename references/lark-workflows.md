@@ -14,7 +14,8 @@
 除纯论文讨论外，建库后的论文阅读、画像生成、上传归档等依赖库流程开始前必须检查：
 
 - `lark-cli` 是否安装、可运行且当前身份已登录。
-- `lark-cli --version` 是否与本文档验证版本 `1.0.19` 一致；不一致时先查 help/schema。
+- 使用 `lark-cli --version` 确认 CLI 可运行；不要使用 `lark-cli version` 作为版本检查命令。
+- 写入前以当前环境的 help/schema 确认参数；若 help 与已验证行为冲突，按 `command-pitfalls.md` 的已验证命令形态执行并记录错误。
 - `<SKILL_ROOT>/config/defaults.json` 是否包含目标知识库所需 token；`<SKILL_ROOT>` 是包含 `SKILL.md` 的 `paper-lark-reader/` 目录。
 - 目标知识库、`论文索引`、`数据表`、`论文笔记` 是否可访问。
 

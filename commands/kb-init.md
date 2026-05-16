@@ -18,7 +18,7 @@
    python3 scripts/paper_lark_cli.py check
    lark-cli --version
    ```
-4. 本流程按 `lark-cli version 1.0.19` 编写；若版本不同，先查相关命令 `--help` 或 `schema`。
+4. 本流程不绑定固定 `lark-cli` 版本；执行前以当前环境的 `--help` 或 `schema` 确认命令参数。
 5. 若 `lark-cli` 未安装、未登录或权限不足，停止建库并提示用户先完成飞书 CLI 配置。
 
 ## 步骤

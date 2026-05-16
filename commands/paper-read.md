@@ -57,13 +57,15 @@ python3 scripts/paper_lark_cli.py paper-prep \
   --output <paper.context.json>
 ```
 
-若已知 DOI，加 `--doi 10.xxxx/xxxxx` 提高出版核验准确率。若返回 `ok: false`，按错误提示修复依赖，不要把 traceback 当成用户结论。
+若后续需要单独使用 `extract` 和 `metadata` 的中间结果，可增加 `--write-intermediates`，同时写出同名 `*.text.json` 和 `*.metadata.json`。若已知 DOI，加 `--doi 10.xxxx/xxxxx` 提高出版核验准确率。若返回 `ok: false`，按错误提示修复依赖，不要把 traceback 当成用户结论。
+
+依赖链 `extract -> metadata -> infer` 必须串行执行，禁止把依赖前一步输出文件的命令放进并行工具调用。
 
 ### 3. 判断出版信息
 
 基于 `paper.context.json` 中的 `metadata` 和 `publication` 判断出版、年份和置信度。联网核验只用于出版元数据，不用于扩写论文内容。
 
-若 Crossref 失败但 PDF 内部包含明确 DOI、venue 和 year，可继续生成本地笔记；上传或新增选项前仍需确认。`出版` 优先复用已有选项；无合适选项时按常用简称生成候选。
+若 Crossref 失败但 PDF 内部包含明确 DOI、venue 和 year，可继续生成本地笔记；上传前按 `publication.confirmation_reason` 判断风险。`pdf_evidence_only` 表示只有 PDF 证据但无来源冲突，作为低风险确认项；`source_conflict` 或 `missing_venue` 需要暂停确认。`出版` 优先复用已有选项；无合适选项时按常用简称生成候选。
 
 ### 4. 生成笔记
 

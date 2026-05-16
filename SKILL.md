@@ -7,7 +7,7 @@ description: 阅读学术论文 PDF，生成结构化中文论文笔记，围绕
 
 当用户正在处理学术论文，并需要建库、论文阅读、结构化笔记、追问讨论、笔记修订、上传归档或用户触发的研究画像更新时，使用本 skill。
 
-本 skill 按 `lark-cli version 1.0.19` 的命令形态整理。若本地版本不同，执行飞书写入前必须先查对应命令的 `--help` 或 `schema`。
+本 skill 的飞书命令以当前环境的 `--help` / `schema` 为准；执行写入前必须确认命令参数形态，并在遇到 help 与实际行为不一致时优先使用已验证命令形态。
 
 ## 触发范围
 
@@ -101,7 +101,7 @@ description: 阅读学术论文 PDF，生成结构化中文论文笔记，围绕
 
 ```bash
 python3 scripts/paper_lark_cli.py check [--output FILE]
-python3 scripts/paper_lark_cli.py paper-prep --pdf paper.pdf [--doi 10.xxxx/xxx] --output paper.context.json
+python3 scripts/paper_lark_cli.py paper-prep --pdf paper.pdf [--doi 10.xxxx/xxx] [--write-intermediates] --output paper.context.json
 python3 scripts/paper_lark_cli.py extract paper.pdf --output paper.text.json
 python3 scripts/paper_lark_cli.py metadata paper.text.json --output paper.metadata.json
 python3 scripts/paper_lark_cli.py lookup --title "Paper Title" --doi "10.xxxx/xxxxx"

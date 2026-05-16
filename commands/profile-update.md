@@ -134,7 +134,7 @@ lark-cli wiki spaces get_node --params '{"token":"<node_token>"}'
 
 - `node_token`
 - `obj_token`
-- Wiki 链接格式：`https://<tenant>.feishu.cn/wiki/<node_token>`
+- Wiki 链接优先使用命令返回的 URL；若返回值缺失，fallback 为 `https://www.feishu.cn/wiki/<node_token>`
 
 不要尝试通过 CLI 反查不存在的 URL 命令。
 
