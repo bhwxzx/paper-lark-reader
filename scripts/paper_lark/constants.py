@@ -40,6 +40,7 @@ REQUIRED_SKILL_FILES = [
     "commands/note-revise.md",
     "commands/profile-update.md",
     "commands/kb-upload.md",
+    "commands/paper-translate.md",
     "templates/paper-note.md",
     "templates/research-profile.md",
     "templates/upload-preview.md",
@@ -55,4 +56,5 @@ REQUIRED_SKILL_FILES = [
     "references/lark-workflows.md",
     "references/publication-policy.md",
     "references/note-writing-guide.md",
+    "references/translation-guide.md",
 ]

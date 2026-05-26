@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 paper-lark-reader 本地辅助命令。
 
@@ -106,7 +106,7 @@ def cmd_metadata(args):
     if not path.exists():
         emit(error(
             f"正文 JSON 文件不存在：{args.text_json}",
-            "请先运行 `python3 scripts/paper_lark_cli.py extract <paper.pdf> --output <paper.text.json>`，或使用 `paper-prep --write-intermediates` 生成中间文件。",
+            "请先运行 `python scripts/paper_lark_cli.py extract <paper.pdf> --output <paper.text.json>`，或使用 `paper-prep --write-intermediates` 生成中间文件。",
             text_json=args.text_json,
         ), args.output)
         return
@@ -132,6 +132,93 @@ def cmd_infer(args):
 
 def cmd_title(args):
     print(title_case(args.title) if args.title_case else sanitize_title(args.title))
+
+def cmd_full_extract(args):
+    """提取完整论文，将伴生文件存入 translation/ 子目录。仅提取文本和表格，不提取图片。"""
+    try:
+        import pdfplumber
+    except ImportError:
+        emit(error("缺少 pdfplumber 库", "请在环境中运行: pip install pdfplumber"), args.output)
+        return
+
+    pdf_path = Path(args.pdf)
+    if not pdf_path.exists():
+        emit(error(f"PDF 文件不存在: {args.pdf}"), args.output)
+        return
+
+    # 智能确定输出目录
+    output_path = Path(args.output) if args.output else pdf_path.with_suffix(".full_content.json")
+    translation_dir = output_path.parent
+    translation_dir.mkdir(parents=True, exist_ok=True)
+
+    result = {
+        "pdf": str(pdf_path),
+        "sections": [],
+        "tables": []
+    }
+
+    try:
+        with pdfplumber.open(pdf_path) as pdf:
+            full_text_blocks = []
+            for page_idx, page in enumerate(pdf.pages):
+                page_num = page_idx + 1
+                
+                # 1. 提取文本
+                text = page.extract_text() or ""
+                full_text_blocks.append(f"<!-- PAGE {page_num} START -->")
+                full_text_blocks.append(text)
+                
+                # 2. 提取表格并转为 Markdown 格式
+                tables = page.extract_tables()
+                for tab_idx, table in enumerate(tables):
+                    md_table = []
+                    for row in table:
+                        clean_row = [str(c).replace('\n', ' ') if c else "" for c in row]
+                        md_table.append("| " + " | ".join(clean_row) + " |")
+                        if len(md_table) == 1:
+                            md_table.append("|" + "|".join(["---"] * len(clean_row)) + "|")
+                    
+                    if md_table:
+                        table_str = "\n".join(md_table)
+                        result["tables"].append({"page": page_num, "markdown": table_str})
+                        full_text_blocks.append(f"\n{table_str}\n")
+                        
+                full_text_blocks.append(f"<!-- PAGE {page_num} END -->\n")
+            
+            # 3. 智能段落切分（强制物理分块防截断）
+            full_content = "\n".join(full_text_blocks)
+            import re
+            raw_sections = re.split(r'\n(?=(?:[IVX]+\.|[0-9]+\.)\s*[A-Z][a-zA-Z\s]+|Abstract|References)', full_content)
+            
+            MAX_CHUNK_SIZE = 2500
+            chunk_id = 1
+            
+            for sec_text in raw_sections:
+                sec_text = sec_text.strip()
+                if not sec_text:
+                    continue
+                    
+                if len(sec_text) <= MAX_CHUNK_SIZE:
+                    result["sections"].append({"section_id": chunk_id, "content": sec_text})
+                    chunk_id += 1
+                else:
+                    paragraphs = sec_text.split('\n\n')
+                    current_chunk = ""
+                    for p in paragraphs:
+                        if len(current_chunk) + len(p) < MAX_CHUNK_SIZE:
+                            current_chunk += p + "\n\n"
+                        else:
+                            if current_chunk.strip():
+                                result["sections"].append({"section_id": chunk_id, "content": current_chunk.strip()})
+                                chunk_id += 1
+                            current_chunk = p + "\n\n"
+                    if current_chunk.strip():
+                        result["sections"].append({"section_id": chunk_id, "content": current_chunk.strip()})
+                        chunk_id += 1
+
+        emit(result, args.output)
+    except Exception as e:
+        emit(error(f"全文解析失败: {str(e)}"), args.output)
 
 
 # ── 笔记校验 ───────────────────────────────────────────────────────────────────
@@ -202,9 +289,16 @@ def main():
     p.add_argument("--output")
     p.set_defaults(func=cmd_validate_tree)
 
+    # === 新增：全文提取与翻译支持 ===
+    p = sub.add_parser("full-extract", help="提取全文，导出图片并把表格转为 Markdown")
+    p.add_argument("--pdf", required=True)
+    p.add_argument("--output")
+    p.add_argument("--extract-images", type=bool, default=False, help="是否裁剪保存 PDF 中的图片")
+    p.set_defaults(func=cmd_full_extract)
+    # =================================
+
     args = parser.parse_args()
     args.func(args)
-
 
 if __name__ == "__main__":
     main()

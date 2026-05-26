@@ -15,7 +15,7 @@
 2. 读取 `<SKILL_ROOT>/config/defaults.json`，取得目标知识库名称。
 3. 运行环境检查：
    ```bash
-   python3 scripts/paper_lark_cli.py check
+   python scripts/paper_lark_cli.py check
    lark-cli --version
    ```
 4. 本流程不绑定固定 `lark-cli` 版本；执行前以当前环境的 `--help` 或 `schema` 确认命令参数。
@@ -138,9 +138,10 @@ done
 | 6 | 创建 | `{"name":"创建","type":"created_at"}` |
 | 7 | 附件 | `{"name":"附件","type":"attachment"}` |
 | 8 | 笔记 | `{"name":"笔记","type":"text","style":{"type":"url"}}` |
-| 9 | Abstract | `{"name":"Abstract","type":"text"}` |
-| 10 | 标题 | `{"name":"标题","type":"text"}` |
-| 11 | 摘要 | `{"name":"摘要","type":"text"}` |
+| 9 | 翻译 | `{"name":"翻译","type":"text","style":{"type":"url"}}` |
+| 10 | Abstract | `{"name":"Abstract","type":"text"}` |
+| 11 | 标题 | `{"name":"标题","type":"text"}` |
+| 12 | 摘要 | `{"name":"摘要","type":"text"}` |
 
 创建命令：
 
@@ -160,7 +161,7 @@ lark-cli base +view-set-visible-fields \
   --base-token <app_token> \
   --table-id <table_id> \
   --view-id <view_id> \
-  --json '{"visible_fields":["<Title字段ID>","<出版字段ID>","<年份字段ID>","<状态字段ID>","<标签字段ID>","<评分字段ID>","<创建字段ID>","<附件字段ID>","<笔记字段ID>","<Abstract字段ID>","<标题字段ID>","<摘要字段ID>"]}'
+  --json '{"visible_fields":["<Title字段ID>","<出版字段ID>","<年份字段ID>","<状态字段ID>","<标签字段ID>","<评分字段ID>","<创建字段ID>","<附件字段ID>","<笔记字段ID>","<翻译字段ID>","<Abstract字段ID>","<标题字段ID>","<摘要字段ID>"]}'
 ```
 
 回读验证：
@@ -236,6 +237,27 @@ lark-cli docs +fetch \
 
 结果中出现 `<folder_manager>` 才算通过。若不含，停止并提示用户手动插入飞书子文档列表组件。
 
+### 10.1 创建“全文翻译”父文档（可选扩展）
+
+若知识库中不存在标题为 `全文翻译` 的 `docx` 节点，则创建它，用于归档长篇全文翻译：
+
+```bash
+lark-cli wiki +node-create \
+  --space-id <space_id> \
+  --obj-type docx \
+  --title "全文翻译"
+```
+
+记录返回的：
+obj_token 为 trans_parent_doc_token
+node_token 为 trans_parent_node_token
+
+```bash
+lark-cli api POST /docx/v1/documents/<trans_parent_doc_token>/blocks/<trans_parent_doc_token>/children \
+  --as user \
+  --data '{"children":[{"block_type":51,"sub_page_list":{"wiki_token":"<trans_parent_node_token>"}}]}'
+```
+
 ### 11. 保存配置
 
 将以下字段写入 `<SKILL_ROOT>/config/defaults.json`，不得写入当前项目目录：
@@ -247,7 +269,9 @@ lark-cli docs +fetch \
   "app_token": "<app_token>",
   "table_id": "<table_id>",
   "note_parent_doc_token": "<note_parent_doc_token>",
-  "note_parent_node_token": "<note_parent_node_token>"
+  "note_parent_node_token": "<note_parent_node_token>",
+  "trans_parent_doc_token": "<trans_parent_doc_token>",
+  "trans_parent_node_token": "<trans_parent_node_token>"
 }
 ```
 
@@ -255,7 +279,7 @@ lark-cli docs +fetch \
 
 - 知识库名称与用户确认一致。
 - Base 标题为 `论文索引`，表名为 `数据表`，视图名为 `概览`。
-- `概览` 视图可见字段顺序为：`Title、出版、年份、状态、标签、评分、创建、附件、笔记、Abstract、标题、摘要`。
+- `概览` 视图可见字段顺序为：`Title、出版、年份、状态、标签、评分、创建、附件、笔记、翻译、Abstract、标题、摘要`。
 - `评分` 为 Rating 样式，`笔记` 为 URL 样式文本字段。
 - `论文笔记` 父文档存在，且 `docs +fetch` 中包含 `<folder_manager>`。
 - `<SKILL_ROOT>/config/defaults.json` 包含后续流程所需 token。

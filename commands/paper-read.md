@@ -22,7 +22,7 @@
 禁止快捷摘要：读取 PDF 后不得直接输出最终阅读总结来替代本流程。必须先完成环境检查和论文库只读上下文获取；若配置、字段选项或 `研究概述` 读取失败，进入离线确认门，获得用户明确确认后才可继续生成本地笔记。
 
 ```bash
-python3 scripts/paper_lark_cli.py check
+python scripts/paper_lark_cli.py check
 ```
 
 定位 skill 根目录：包含 `SKILL.md` 的 `paper-lark-reader/` 目录。读取 `<SKILL_ROOT>/config/defaults.json`，不要读取当前项目目录下的同名文件。确认存在 `space_id`、`app_token` 和 `table_id`，并只读验证目标库可访问。
@@ -51,10 +51,13 @@ lark-cli wiki nodes list --params '{"space_id":"<space_id>","page_size":50}'
 
 ### 2. PDF 预处理
 
+必须将产生的中间文件隔离存放到 PDF 所在目录的 notes/ 子文件夹中。若该子文件夹不存在，需自动创建。
+
 ```bash
-python3 scripts/paper_lark_cli.py paper-prep \
+python scripts/paper_lark_cli.py paper-prep \
   --pdf <paper.pdf> \
-  --output <paper.context.json>
+  --output <paper_dir>/notes/<paper_name>.context.json
+  --write-intermediates
 ```
 
 若后续需要单独使用 `extract` 和 `metadata` 的中间结果，可增加 `--write-intermediates`，同时写出同名 `*.text.json` 和 `*.metadata.json`。若已知 DOI，加 `--doi 10.xxxx/xxxxx` 提高出版核验准确率。若返回 `ok: false`，按错误提示修复依赖，不要把 traceback 当成用户结论。
@@ -81,7 +84,7 @@ python3 scripts/paper_lark_cli.py paper-prep \
 
 ### 5. 写入本地笔记
 
-在 PDF 同路径生成或更新 `*.paper-note.md`：
+在 PDF 所在目录的 notes/ 子文件夹中生成或更新笔记，文件严格命名为 <paper_name>.paper-note.md
 
 - 首次阅读默认生成新笔记。
 - 已存在同题或同路径笔记时，先展示已有笔记路径、将被修改的章节和可能覆盖的内容；只有用户确认后才更新既有笔记。
@@ -90,7 +93,7 @@ python3 scripts/paper_lark_cli.py paper-prep \
 写完后校验：
 
 ```bash
-python3 scripts/paper_lark_cli.py note-check <paper.paper-note.md>
+python scripts/paper_lark_cli.py note-check <paper_dir>/notes/<paper_name>.paper-note.md
 ```
 
 聊天输出只作为笔记完成后的简短回报，说明笔记路径、校验结果和最关键结论；不得用聊天输出替代 `*.paper-note.md`。
@@ -103,6 +106,7 @@ python3 scripts/paper_lark_cli.py note-check <paper.paper-note.md>
 
 ## 验收
 
+- 本地笔记及 JSON 伴生文件正确存放在 notes/ 子目录下。
 - 本地笔记存在且通过 `note-check`。
 - 元数据表只包含：`Title、出版、年份、标签、评分、Abstract、标题、摘要`。
 - `摘要` 是英文 Abstract 的中文翻译，不是总结。
@@ -115,3 +119,4 @@ python3 scripts/paper_lark_cli.py note-check <paper.paper-note.md>
 - 不要从文件名猜出版和年份后直接写入。
 - 不要视觉解析图表；只基于正文、caption 和作者解释。
 - 不要在首次给出 PDF 并要求阅读时只给聊天摘要；必须按本流程生成并校验本地笔记，除非用户明确要求不生成笔记。
+- 不要把笔记文件和 JSON 生成在与 PDF 平级的目录下，必须放入 notes/。

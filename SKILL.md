@@ -15,6 +15,7 @@ description: 阅读学术论文 PDF，生成结构化中文论文笔记，围绕
 
 - 初始化、检查或维护飞书论文知识库。
 - 阅读、精读、总结或分析学术论文 PDF；默认等价于生成结构化本地论文笔记。
+- 要求对论文全文进行逐节翻译、完整翻译，或提取图表生成带内部锚点的完整中文译文。
 - 生成结构化中文论文笔记。
 - 解释论文的方法、数据、实验、结论、局限或启发。
 - 讨论论文与用户研究方向的关系。
@@ -56,6 +57,8 @@ description: 阅读学术论文 PDF，生成结构化中文论文笔记，围绕
 | 根据讨论或纠错修订笔记 | `commands/note-revise.md` | `references/note-writing-guide.md` |
 | 生成或更新 `研究概述` | `commands/profile-update.md` | `references/lark-workflows.md`、`references/command-pitfalls.md` |
 | 上传归档笔记、PDF 和 Base 记录 | `commands/kb-upload.md` | `references/lark-workflows.md`、`references/note-writing-guide.md`、`references/command-pitfalls.md` |
+| 完整翻译 PDF 并提取图表 | `commands/paper-translate.md` | `references/command-pitfalls.md` |
+| 根据画像推荐最新论文或公众号文章 | `commands/paper-recommend.md` | 读取本地 `研究概述.md` 作为推荐基准 |
 
 ## 全局规则
 
@@ -79,6 +82,10 @@ description: 阅读学术论文 PDF，生成结构化中文论文笔记，围绕
 18. 新增 `标签`、`出版` 或 `年份` 选项前，必须展示理由并获得用户确认。
 19. 默认联网搜索只用于出版元数据核验；除非用户明确要求，不用于扩写论文内容。
 20. 任何可能造成信息损失的操作都必须先展示影响并获得用户明确确认，包括覆盖、更新、删除、移动、合并、清理、重构、重新上传、同步写回、重命名已有资源，或改变已有本地/云端内容。
+21. 全文翻译属于重度计算流程，禁止在聊天窗口内一次性输出完整译文。必须调用 `full-extract` 脚本，按章节（Section）分批次翻译并写入本地 `*_translated.md` 文件。
+22. 由于本项目运行在特殊的代理环境下，绝对禁止 AI 执行任何网络诊断（如 curl 测试）或网络配置修改（如禁用网卡）。
+23. 必须保持全文翻译的章节结构清晰、层级分明，禁止出现跳级标题。（例如绝不允许从 `# 一级标题` 下方直接出现 `### 三级标题`）
+24. **打扫战场（清理临时文件）**：任何包含飞书 API 交互、写入静默日志或生成临时缓存的工作流，在其执行结束的最后一步，必须使用 PowerShell 的 `Remove-Item -Force -ErrorAction SilentlyContinue` 命令，静默清理掉过程中产生的所有临时文件（如 `.lark_temp.log`、`.existing_papers.json`、`record_list.json` 等），保持用户工作区绝对干净。
 
 ## 确认门
 
@@ -97,18 +104,19 @@ description: 阅读学术论文 PDF，生成结构化中文论文笔记，围绕
 
 ## 本地命令
 
-飞书工作流由执行者调用 `lark-*` skills 完成。Python 命令只处理本地文件：
+飞书工作流由执行者调用 `lark-*` skills 完成。Python 命令只处理本地文件, 注意在对应的虚拟环境中执行：
 
 ```bash
-python3 scripts/paper_lark_cli.py check [--output FILE]
-python3 scripts/paper_lark_cli.py paper-prep --pdf paper.pdf [--doi 10.xxxx/xxx] [--write-intermediates] --output paper.context.json
-python3 scripts/paper_lark_cli.py extract paper.pdf --output paper.text.json
-python3 scripts/paper_lark_cli.py metadata paper.text.json --output paper.metadata.json
-python3 scripts/paper_lark_cli.py lookup --title "Paper Title" --doi "10.xxxx/xxxxx"
-python3 scripts/paper_lark_cli.py infer --metadata paper.metadata.json [--publication paper.publication.json] --output paper.options.json
-python3 scripts/paper_lark_cli.py title "paper title" --title-case
-python3 scripts/paper_lark_cli.py note-check paper.paper-note.md
-python3 scripts/paper_lark_cli.py validate-tree .
+conda run -n paper_reader python scripts/paper_lark_cli.py check [--output FILE]
+conda run -n paper_reader python scripts/paper_lark_cli.py paper-prep --pdf paper.pdf [--doi 10.xxxx/xxx] [--write-intermediates] --output paper.context.json
+conda run -n paper_reader python scripts/paper_lark_cli.py extract paper.pdf --output paper.text.json
+conda run -n paper_reader python scripts/paper_lark_cli.py metadata paper.text.json --output paper.metadata.json
+conda run -n paper_reader python scripts/paper_lark_cli.py lookup --title "Paper Title" --doi "10.xxxx/xxxxx"
+conda run -n paper_reader python scripts/paper_lark_cli.py infer --metadata paper.metadata.json [--publication paper.publication.json] --output paper.options.json
+conda run -n paper_reader python scripts/paper_lark_cli.py title "paper title" --title-case
+conda run -n paper_reader python scripts/paper_lark_cli.py note-check paper.paper-note.md
+conda run -n paper_reader python scripts/paper_lark_cli.py validate-tree .
+conda run -n paper_reader python scripts/paper_lark_cli.py full-extract --pdf paper.pdf --output paper.full_content.json --extract-images true
 ```
 
 ## 输出文件
@@ -119,6 +127,9 @@ python3 scripts/paper_lark_cli.py validate-tree .
 - 选项推断：`*.options.json`
 - 论文笔记：`*.paper-note.md`，通常与源 PDF 同目录
 - 研究画像文件：Markdown，通常命名为 `研究概述.md`
+- 全文解析数据：`*.full_content.json`
+- 全文翻译文档：`*_translated.md`，通常与源 PDF 同目录
+- 图表导出目录：`images/`，位于源 PDF 同目录下，存放提取的图表截图
 
 ## 安全边界
 
