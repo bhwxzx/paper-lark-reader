@@ -29,7 +29,7 @@
 
 运行：
 ```bash
-python scripts/paper_lark_cli.py check
+& ".\py.cmd" scripts/paper_lark_cli.py check
 ```
 若字段缺失、目标库不可访问或权限不足，停止并提示用户先执行建库流程或修复飞书 CLI/权限。
 
@@ -42,7 +42,7 @@ python scripts/paper_lark_cli.py check
 ### 1. 校验本地笔记
 
 ```bash
-python scripts/paper_lark_cli.py note-check <paper_dir>/notes/<NOTE.md>
+& ".\py.cmd" scripts/paper_lark_cli.py note-check <paper_dir>/notes/<NOTE.md>
 ```
 若输出 `ok: false`，修正后再继续。
 
@@ -50,7 +50,7 @@ python scripts/paper_lark_cli.py note-check <paper_dir>/notes/<NOTE.md>
 
 在 Base 中搜索同 Title 记录。`+record-search.keyword` 最长 50 字符；长标题截取稳定短关键词，命中后必须人工比对完整 `Title`。
 ```bash
-lark-cli base +record-search \
+npx lark-cli base +record-search \
   --base-token <app_token> \
   --table-id <table_id> \
   --json '{"keyword":"<Title 前 50 字符或稳定短关键词>","search_fields":["Title"]}'
@@ -72,7 +72,7 @@ lark-cli base +record-search \
 
 **创建笔记文档（必需）：**
 ```bash
-lark-cli wiki +node-create \
+npx lark-cli wiki +node-create \
   --space-id <space_id> \
   --parent-node-token <note_parent_node_token> \
   --obj-type docx \
@@ -82,7 +82,7 @@ lark-cli wiki +node-create \
 
 **创建翻译文档（若探测到翻译文件）：**
 ```bash
-lark-cli wiki +node-create \
+npx lark-cli wiki +node-create \
   --space-id <space_id> \
   --parent-node-token <trans_parent_node_token> \
   --obj-type docx \
@@ -125,12 +125,12 @@ npx lark-cli wiki spaces get_node --params '{"token":"<对应的_node_token>"}'
 ### 7. 创建 Base 记录
 
 字段值严格来自笔记 `## 元数据` 表，`状态` 固定为 `待读`。如果是【双轨模式】，留空 `笔记` 和 `翻译`，由下一步统一更新；若是新增则一并写入。
-*(注意：此步需要获取 record_id，绝对不能加静默输出！)*
+*(注意：此步需要获取 record_id，绝对不能加静默输出！此处 JSON 结构中的 `<评分>` 必须是不带引号的纯数字，AI 会自动从元数据表中提取并替换。)*
 ```bash
 npx lark-cli base +record-batch-create \
   --base-token <app_token> \
   --table-id <table_id> \
-  --json '{"fields":["Title","出版","年份","状态","标签","评分","Abstract","标题","摘要"],"rows":[["<Title>","<出版>","<年份>","待读",["<标签>"],3,"<Abstract>","<标题>","<摘要>"]]}'
+  --json '{"fields":["Title","出版","年份","状态","标签","评分","Abstract","标题","摘要"],"rows":[["<Title>","<出版>","<年份>","待读",["<标签>"],<评分>,"<Abstract>","<标题>","<摘要>"]]}'
 ```
 记录返回的 `record_id`。
 
@@ -169,7 +169,7 @@ Remove-Item -Path .lark_temp.log -Force -ErrorAction SilentlyContinue
 ## 验收
 
 - 笔记子文档在 `论文笔记` 下，翻译子文档（若有）在 `全文翻译` 下；标题绝不能为 `Untitled`。
-- Base 记录存在，`状态 = 待读`，`评分 = 3`（除非用户修改）。
+- Base 记录存在，`状态 = 待读`，评分与笔记元数据表完全一致）。
 - `笔记` 和 `翻译` 字段正确填入了带 URL 格式的超链接。
 - 附件里只有一个主文件 `paper.pdf`。
 - `Title`、`Abstract`、`标题`、`摘要` 与笔记元数据表逐字一致。

@@ -15,7 +15,7 @@
 2. 读取 `<SKILL_ROOT>/config/defaults.json`，取得目标知识库名称。
 3. 运行环境检查：
    ```bash
-   python scripts/paper_lark_cli.py check
+   & ".\py.cmd" scripts/paper_lark_cli.py check
    lark-cli --version
    ```
 4. 本流程不绑定固定 `lark-cli` 版本；执行前以当前环境的 `--help` 或 `schema` 确认命令参数。

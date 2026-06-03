@@ -26,7 +26,7 @@
 定位 skill 根目录：包含 `SKILL.md` 的 `paper-lark-reader/` 目录。读取 `<SKILL_ROOT>/config/defaults.json`，不要读取当前项目目录下的同名文件。若 `space_id`、`app_token` 或 `table_id` 缺失，停止并提示用户先执行建库流程。
 
 ```bash
-python scripts/paper_lark_cli.py check
+& ".\py.cmd" scripts/paper_lark_cli.py check
 ```
 
 ## 步骤

@@ -37,7 +37,7 @@
 6. 写入时必须保持原有的飞书兼容 LaTeX 公式格式（`$math$`）和无序列表风格。
 7. 修订后重新执行校验：
    ```bash
-   python scripts/paper_lark_cli.py note-check <paper_dir>/notes/<paper_name>.paper-note.md
+   & ".\py.cmd" scripts/paper_lark_cli.py note-check <paper_dir>/notes/<paper_name>.paper-note.md
    ```
 8. **云端同步拦截**：若这篇笔记已归档到飞书，用户随后要求“同步到飞书”，必须转入 `kb-upload.md` 走重复检测；同 Title 命中时提示将更新已有云端记录，确认后走覆盖更新分支。
 

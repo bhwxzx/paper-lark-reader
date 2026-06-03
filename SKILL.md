@@ -104,19 +104,19 @@ description: 阅读学术论文 PDF，生成结构化中文论文笔记，围绕
 
 ## 本地命令
 
-飞书工作流由执行者调用 `lark-*` skills 完成。Python 命令只处理本地文件, 注意在对应的虚拟环境中执行：
+飞书工作流由执行者调用 `lark-*` skills 完成。Python 命令只处理本地文件。由于沙箱环境限制，**必须使用skill项目根目录下的 `py.cmd` 代理执行，绝对禁止直接使用 python**：
 
 ```bash
-conda run -n paper_reader python scripts/paper_lark_cli.py check [--output FILE]
-conda run -n paper_reader python scripts/paper_lark_cli.py paper-prep --pdf paper.pdf [--doi 10.xxxx/xxx] [--write-intermediates] --output paper.context.json
-conda run -n paper_reader python scripts/paper_lark_cli.py extract paper.pdf --output paper.text.json
-conda run -n paper_reader python scripts/paper_lark_cli.py metadata paper.text.json --output paper.metadata.json
-conda run -n paper_reader python scripts/paper_lark_cli.py lookup --title "Paper Title" --doi "10.xxxx/xxxxx"
-conda run -n paper_reader python scripts/paper_lark_cli.py infer --metadata paper.metadata.json [--publication paper.publication.json] --output paper.options.json
-conda run -n paper_reader python scripts/paper_lark_cli.py title "paper title" --title-case
-conda run -n paper_reader python scripts/paper_lark_cli.py note-check paper.paper-note.md
-conda run -n paper_reader python scripts/paper_lark_cli.py validate-tree .
-conda run -n paper_reader python scripts/paper_lark_cli.py full-extract --pdf paper.pdf --output paper.full_content.json --extract-images true
+& ".\py.cmd" scripts/paper_lark_cli.py check [--output FILE]
+& ".\py.cmd" scripts/paper_lark_cli.py paper-prep --pdf paper.pdf [--doi 10.xxxx/xxx] [--write-intermediates] --output paper.context.json
+& ".\py.cmd" scripts/paper_lark_cli.py extract paper.pdf --output paper.text.json
+& ".\py.cmd" scripts/paper_lark_cli.py metadata paper.text.json --output paper.metadata.json
+& ".\py.cmd" scripts/paper_lark_cli.py lookup --title "Paper Title" --doi "10.xxxx/xxxxx"
+& ".\py.cmd" scripts/paper_lark_cli.py infer --metadata paper.metadata.json [--publication paper.publication.json] --output paper.options.json
+& ".\py.cmd" scripts/paper_lark_cli.py title "paper title" --title-case
+& ".\py.cmd" scripts/paper_lark_cli.py note-check paper.paper-note.md
+& ".\py.cmd" scripts/paper_lark_cli.py validate-tree .
+& ".\py.cmd" scripts/paper_lark_cli.py full-extract --pdf paper.pdf --output paper.full_content.json --extract-images true
 ```
 
 ## 输出文件

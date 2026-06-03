@@ -15,7 +15,7 @@
 禁止直接在聊天窗口内一次性输出全部翻译，因为超出 Token 限制会导致中断或省略。必须先调用本地 Python 脚本解析 PDF，并将产生的所有中间文件输出到 `translation/` 子目录中。
 
 ```bash
-python scripts/paper_lark_cli.py full-extract \
+& ".\py.cmd" scripts/paper_lark_cli.py full-extract \
   --pdf <paper_dir>/<paper_name>.pdf \
   --output <paper_dir>/translation/<paper_name>.full_content.json \
   --extract-images true
@@ -39,3 +39,4 @@ python scripts/paper_lark_cli.py full-extract \
  - 正文的引用数字全部转为了 **[x]** 的飞书兼容加粗格式，全文绝不存在 <span id="..."> 或 [1](#ref-1) 等 HTML 标签。
  - 最终翻译文件内没有冗余的 ```markdown 语法残留。
  - 全文未出现因 Token 超限导致的“翻译未完成”或强行总结。
+ - 最终翻译文件末尾必须包含完整的参考文献（References）章节，绝对不允许遗漏或只写个标题。

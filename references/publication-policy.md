@@ -13,7 +13,7 @@
 
 ## 查证工具与优先级
 
-1. **本地脚本优先**：使用 `python scripts/paper_lark_cli.py lookup --title "..." --doi "..."` 查询 Crossref。
+1. **本地脚本优先**：使用 `& ".\py.cmd" scripts/paper_lark_cli.py lookup --title "..." --doi "..."` 查询 Crossref。
 2. **AI 联网搜索（若脚本失败）**：使用你的原生网页搜索能力，按以下优先级查证：
    - arXiv 页面中的 `Journal reference` 或 `DOI` 声明。
    - Semantic Scholar 或 OpenAlex 的收录页面。

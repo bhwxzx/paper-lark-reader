@@ -10,7 +10,7 @@ class PdfExtractionError(RuntimeError):
 
 def extract_with_pdftotext(path):
     try:
-        result = subprocess.run(["pdftotext", "-layout", str(path), "-"], text=True, capture_output=True, timeout=120)
+        result = subprocess.run(["pdftotext", "-layout", str(path), "-"], text=True, encoding="utf-8", capture_output=True, timeout=120)
     except FileNotFoundError:
         return None
     return result.stdout if result.returncode == 0 else None
