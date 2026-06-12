@@ -136,15 +136,16 @@ npx lark-cli base +record-batch-create \
 
 ### 8. 上传 PDF 附件
 
-`--file` 使用相对路径。附件上传的返回日志极大，必须静默输出。
+`--file` 使用相对路径。附件上传的返回日志极大，必须静默输出。注意：由于 `lark-cli` 新版不再支持 `--name` 参数，必须在本地先将 PDF 临时复制为 `paper.pdf`，然后指定 `--file paper.pdf` 上传，完成后清扫临时文件。
 ```bash
+Copy-Item "<PDF路径>" paper.pdf
 npx lark-cli base +record-upload-attachment \
   --base-token <app_token> \
   --table-id <table_id> \
   --record-id <record_id> \
   --field-id "附件" \
-  --file <PDF路径> \
-  --name "paper.pdf" > .lark_temp.log
+  --file paper.pdf > .lark_temp.log
+Remove-Item paper.pdf -Force -ErrorAction SilentlyContinue
 ```
 
 ### 9. 回写飞书链接
